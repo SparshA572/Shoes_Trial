@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="shoppingApp">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add to Cart</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            text-align: center;
+            transition: background-color 0.5s ease;
+        }
+
+        h1, h2, h3 {
+            color: #080808;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            animation: airplaneIn 2.8s ease forwards;
+            transform-origin: center;
+            opacity: 0;
+        }
+
+        @keyframes airplaneIn {
+            0% {
+                transform: translateY(-100vh) rotate(-15deg) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .item img {
+            width: 100px;
+            height: auto;
+            margin-right: 10px;
+            pointer-events: none; /* Disable click events on the image */
+        }
+
+        .item:hover {
+            background-color: #e0e0e0;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .total {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .remove-button {
+            padding: 6px 12px; /* Adjust padding */
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-button:hover {
+            background-color: #c82333;
+        }
+
+        .home-button {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .home-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body ng-controller="CartController">
+    <div class="container">
+        <h1>Add Items to Cart</h1>
+        <div class="item" ng-repeat="item in items" ng-if="!item.purchased">
+            <div>
+                <img ng-src="{{ item.img }}" alt="{{ item.name }}" ng-if="!item.addedToCart">
+                <p>{{ item.name }} - ${{ item.price }}</p>
+            </div>
+            <button ng-click="addToCart(item)">Add to Cart</button>
+        </div>
+        <h2>Cart</h2>
+        <ul>
+            <li ng-repeat="cartItem in cart">
+                <!-- Remove the image tag from here -->
+                {{ cartItem.name }} - ${{ cartItem.price }}
+                <button class="remove-button" ng-click="removeFromCart(cartItem)">Remove</button>
+            </li>
+        </ul>
+        <h3 class="total">Total Amount: ${{ getTotalAmount() }}</h3>
+        <button class="pay-button" ng-click="makePayment()">Proceed to Pay</button> <!-- Added Pay Button -->
+        <div ng-show="paymentComplete">Payment Successful!</div> <!-- Payment Confirmation Message -->
+        <a href="index.html" class="home-button">Back to Home</a>
+    </div>
+
+    <script>
+        var app = angular.module('shoppingApp', []);
+
+        app.controller('CartController', function ($scope) {
+            // Existing items in the cart
+            $scope.items = [];
+
+            // New products to be added
+            const products = [
+                {
+                    id: 1,
+                    name: "Air Force",
+                    price: 119,
+                    img: "./img/air.png",
+                    purchased: false, // Add a flag 
+                    addedToCart: false 
+                },
+                {
+                    id: 2,
+                    name: "Air Jordan",
+                    price: 149,
+                    img: "./img/jordan.png",
+                    purchased: false,
+                    addedToCart: false
+                },
+                {
+                    id: 3,
+                    name: "Blazer",
+                    price: 109,
+                    img: "./img/blazer.png",
+                    purchased: false,
+                    addedToCart: false
+                },
+                {
+                    id: 4,
+                    name: "Crater",
+                    price: 129,
+                    img: "./img/crater.png",
+                    purchased: false,
+                    addedToCart: false
+                },
+                {
+                    id: 5,
+                    name: "Hippie",
+                    price: 99,
+                    img: "./img/hippie.png",
+                    purchased: false,
+                    addedToCart: false
+                }
+            ];
+
+            // Add each product as an item
+            products.forEach(function (product) {
+                $scope.items.push({
+                    name: product.name,
+                    price: product.price,
+                    img: product.img,
+                    purchased: product.purchased, // Set purchased flag
+                    addedToCart: product.addedToCart // Set addedToCart flag
+                });
+            });
+
+            // Initialize the cart array
+            $scope.cart = [];
+
+            // Function to add an item to the cart
+            $scope.addToCart = function (item) {
+                var newItem = angular.copy(item); // Create a copy of the item
+                newItem.addedToCart = true; // Mark item as added to cart
+                newItem.purchased = true; // Mark item as purchased
+                $scope.cart.push(newItem);
+            };
+
+            // Function to remove an item from the cart
+            $scope.removeFromCart = function (item) {
+                item.addedToCart = false; // Mark item as not added to cart
+                item.purchased = false; // Mark item as not purchased
+                var index = $scope.cart.indexOf(item);
+                if (index !== -1) {
+                    $scope.cart.splice(index, 1);
+                }
+            };
+
+            // Function to calculate the total amount of the cart
+            $scope.getTotalAmount = function () {
+                var total = 0;
+                for (var i = 0; i < $scope.cart.length; i++) {
+                    total += $scope.cart[i].price;
+                }
+                return total;
+            };
+
+            // Function to simulate payment
+            $scope.makePayment = function () {
+            
+                $scope.paymentComplete = true; // Set payment completion flag
+            };
+        });
+    </script>
+</body>
+
+</html>
